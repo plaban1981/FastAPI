@@ -8,6 +8,3 @@ uvicorn==0.13.4
 gunicorn==19.9.0
 uvloop==0.8.0
 httptools
-json
-io
-pickle
