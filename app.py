@@ -7,11 +7,14 @@ Created on Tue Nov 17 21:40:41 2020
 
 # 1. Library imports
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI,File,UploadFile
+from fastapi.responses import StreamingResponse
 from BankNotes import BankNote
 import numpy as np
 import pickle
 import pandas as pd
+import json
+import io
 # 2. Create the app object
 app = FastAPI()
 pickle_in = open("classifier.pkl","rb")
@@ -46,6 +49,50 @@ def predict_banknote(data:BankNote):
     return {
         'prediction': prediction
     }
+def convertBytesToString(bytes):
+    
+    data = bytes.decode('utf-8').splitlines()
+    print(type(data))
+    df = pd.DataFrame(data)
+    list1 = df.values.tolist()[0]
+    list2 = df.values.tolist()[1:]
+    df1 = pd.DataFrame(list2,columns=list1)
+    val1 = []
+    val2 = []
+    val3 = []
+    val4 = []
+    for item in list2:
+      
+        val1.append(float(item[0].split(",")[0]))
+        val2.append(float(item[0].split(",")[1]))
+        val3.append(float(item[0].split(",")[2]))
+        val4.append(float(item[0].split(",")[3]))
+    var1,var2,var3,var4 = list1[0].split(",")[0],list1[0].split(",")[1],list1[0].split(",")[2],list1[0].split(",")[3]
+    df1 = pd.DataFrame({var1:val1,var2:val2,var3:val3,var4:val4})
+    print(df1.info())
+    print(df1)
+    return df1
+def parse_csv(bytes):
+    result = df.to_json(orient="records")
+    parsed = json.loads(result)
+    return parsed 
+
+@app.post("/csv")
+async def parsecsv(file:UploadFile = File("test.csv")):
+    contents = await file.read()
+    test_data  = convertBytesToString(contents)
+    print(test_data.head())
+    # print(classifier.predict([[variance,skewness,curtosis,entropy]]))
+    predictions = classifier.predict(test_data)
+    preds = []
+    for i in predictions :
+      if(i > 0.5):
+         preds.append("Fake note")
+      else:
+         preds.append("Bank note")
+    test_data['predicted_class']  = preds
+    response = StreamingResponse(io.StringIO(test_data.to_csv("fatapi_predictions.csv",index=False)), media_type="text/csv")
+    return response
 
 # 5. Run the API with uvicorn
 #    Will run on http://127.0.0.1:8000
