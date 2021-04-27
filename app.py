@@ -93,7 +93,7 @@ async def parsecsv(csv_file:UploadFile = File("test.csv")):
          preds.append("Bank note")
     test_data['predicted_class']  = preds
     response = StreamingResponse(io.StringIO(test_data.to_csv("fatapi_predictions.csv",index=False)), media_type="text/csv")
-    return response
+    return test_data
 
 # 5. Run the API with uvicorn
 #    Will run on http://127.0.0.1:8000
