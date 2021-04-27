@@ -78,9 +78,10 @@ def parse_csv(bytes):
     return parsed 
 
 @app.post("/csv")
-async def parsecsv(file:UploadFile = File("test.csv")):
-    contents = await file.read()
-    test_data  = convertBytesToString(contents)
+async def parsecsv(csv_file:UploadFile = File("test.csv")):
+    #contents = await file.read()
+    #test_data  = convertBytesToString(contents)
+    test_data = pd.read_csv(csv_file.file)
     print(test_data.head())
     # print(classifier.predict([[variance,skewness,curtosis,entropy]]))
     predictions = classifier.predict(test_data)
